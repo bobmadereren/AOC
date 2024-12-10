@@ -23,3 +23,21 @@ let result = updates.filter(test)
     .map(u => u[(u.length - 1) / 2])
     .reduce((sum, n) => sum + n, 0);
 console.log(result);
+
+// Part 2
+function order(update) {
+    update = [...update];
+    for (let i = 1; i < update.length; i++)
+        for (let j = i; 1 <= j && rules.has(update[j] + '|' + update[j - 1]); j--) {
+            let temp = update[j];
+            update[j] = update[j - 1];
+            update[j - 1] = temp;
+        }
+    return update;
+}
+
+let result2 = updates.filter(u => !test(u))
+    .map(order)
+    .map(u => u[(u.length - 1) / 2])
+    .reduce((sum, n) => sum + n, 0);
+console.log(result2);
