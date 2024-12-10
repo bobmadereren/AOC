@@ -6,11 +6,11 @@ let input = fs.readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'input
 
 let data = input.split(/\n/).filter(line => line).map(line => line.split(/:? /).map(n => Number(n)));
 
-// Part 1
+// Part 1 & 2
 function test([left, n, ...ns]) {
     let rs = [n];
-    for(let n of ns)
-        rs = rs.map(r => [r + n, r * n]).flat();
+    for (let n of ns)
+        rs = rs.map(r => [r + n, r * n, Number(`${r}${n}`)]).flat(); // <--- remove the 3rd operator for part 1
 
     return rs.some(right => left == right);
 }
