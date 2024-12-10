@@ -20,3 +20,7 @@ function safe(report) {
 let result = data.filter(safe).length;
 console.log(result);
 
+// Part 2
+let data2 = data.map(report => report.map((_, i) => [...report.slice(0, i), ...report.slice(i + 1, report.length)]));
+let result2 = data2.filter(reports => reports.some(safe)).length;
+console.log(result2);
