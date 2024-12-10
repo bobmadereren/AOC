@@ -6,9 +6,23 @@ let input = fs.readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'input
 
 let match = [...input.matchAll(/(\d+) +(\d+)/g)];
 
-let as = match.map(([_, a, b]) => a).sort();
-let bs = match.map(([_, a, b]) => b).sort();
+let left = match.map(([_, l, r]) => Number(l)).sort();
+let right = match.map(([_, l, r]) => Number(r)).sort();
 
-let result = match.reduce((sum, _, i) => sum + Math.abs(as[i] - bs[i]), 0);
-
+// Part 1
+let result = match.reduce((sum, _, i) => sum + Math.abs(left[i] - right[i]), 0);
 console.log(result);
+
+// Part 2 O(n^2)
+let result2 = left.reduce((sum, l) => sum + l * right.filter(r => l == r).length, 0);
+console.log(result2);
+
+// Part 2 O(nlogn) ... O(n) when excluding the sort from the previous part
+let [l, r, sum] = [0, 0, 0];
+
+while (l < left.length && r < right.length) {
+    if (left[l] == right[r]) { sum += left[l]; r++; }
+    else if (left[l] > right[r]) r++;
+    else if (left[l] < right[r]) l++;
+}
+console.log(sum);
