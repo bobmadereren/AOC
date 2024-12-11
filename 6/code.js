@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 
 let input = fs.readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'input.txt')).toString();
 
+// Part 2
 let graph = input.split(/\n/).filter(row => row).map(row => row.split(''));
 
 let startX = 0;
@@ -44,5 +45,3 @@ for (let y = 0; y < graph.length; y++) {
 }
 
 console.log(count);
-
-// takes ~6 sec
