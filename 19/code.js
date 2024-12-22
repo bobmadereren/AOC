@@ -6,25 +6,30 @@ let input = fs.readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'input
 
 let [towelss, ...patternss] = input.split(/\n/);
 let towels = towelss.split(/, /);
+let towelSet = new Set(towels);
 let patterns = patternss.filter(line => line);
 
-let possible = new Set(towels);
-let impossible = new Set();
+let countMap = new Map();
+countMap.set('', 1);
 
-function test(pattern) {
-    if (impossible.has(pattern)) return false;
-    if (possible.has(pattern)) return true;
+function count(pattern) {
+    if (countMap.has(pattern)) return countMap.get(pattern);
 
-    let result = false;
+    let result = 0;
 
-    for (let i = 1; i < pattern.length; i++)
-        if (test(pattern.slice(0, i)) && test(pattern.slice(i)))
-            result = true;
-        
+    for (let i = 1; i <= pattern.length; i++)
+        if (towelSet.has(pattern.slice(0, i))) // <--- use the first i letters as a towel
+            result += count(pattern.slice(i)); // <--- and count how many times you can choose the rest of the towels
 
-    result ? possible.add(pattern) : impossible.add(pattern);
+    countMap.set(pattern, result);
 
     return result;
 }
 
-console.log(patterns.filter(test).length);
+// Part 1
+let possible = patterns.filter(count);
+console.log(possible.length);
+
+// Part 2
+let sum = patterns.reduce((sum, pattern) => sum + count(pattern), 0);
+console.log(sum);
