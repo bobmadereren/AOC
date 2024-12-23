@@ -6,33 +6,32 @@ let input = fs.readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'input
 
 let codes = input.split(/\n/).filter(line => line);
 
-/*
- *                                                      7 8 9
- *     ^ A              ^ A              ^ A            4 5 6
- *   < v >    --->    < v >    --->    < v >    --->    1 2 3
- *                                                        0 A
- */
-
 let keypad = [
-    [7, 8, 9],
-    [4, 5, 6],
-    [1, 2, 3],
-    [, 0, 'A'],
-    [, '^', 'a'],
+    ['7', '8', '9'],
+    ['4', '5', '6'],
+    ['1', '2', '3'],
+    ['', '0^', 'A'],
     ['<', 'v', '>'],
 ];
 
-let pos = new Map(keypad.map((row, y) => row.map((c, x) => [String(c), [y, x]])).flat());
+let pos = {};
+for (let y = 0; y < keypad.length; y++)
+    for (let x = 0; x < keypad[y].length; x++)
+        for (let c of keypad[y][x])
+            pos[c] = [y, x];
 
-function move([y0, x0], [y1, x1]) {
-    if (y0 == y1 && x0 == x1) return [''];
+/**
+ * All minimal words that causes the next keypad to move from (y0, x0) to (y1, x1) and press the button.
+ */
+function instructions([y0, x0], [y1, x1]) {
+    if (y0 == y1 && x0 == x1) return ['A'];
 
     let result = [];
 
     let add = function (c, dy, dx) {
         let [y, x] = [y0 + dy, x0 + dx];
-        if (0 <= y && y < keypad.length && 0 <= x && x < keypad[y].length && keypad[y][x] != null)
-            move([y0 + dy, x0 + dx], [y1, x1]).forEach(rest => result.push(c + rest))
+        if (0 <= y && y < keypad.length && 0 <= x && x < keypad[y].length && keypad[y][x] != '')
+            instructions([y0 + dy, x0 + dx], [y1, x1]).forEach(rest => result.push(c + rest))
     }
 
     if (y0 < y1) add('v', 1, 0);
@@ -41,65 +40,47 @@ function move([y0, x0], [y1, x1]) {
     if (x1 < x0) add('<', 0, -1);
 
     return result;
-
 }
 
-function abstract(start, code) {
-    let rs = [''];
-    let current = start;
+let countMap = new Map();
 
-    for (let next of code) {
-        rs = rs.flatMap(prefix => move(pos.get(current), pos.get(next)).map(suffix => prefix + suffix + 'a'));
-        rs = [...new Set(rs)];
+/**
+ * Complexity of 'A'<source><target>'A' with (n + 1) keypads
+ */
+function count(n, source, target) {
+    if (n == 0) return 1;
+    if (countMap.has([n, source, target].join())) return countMap.get([n, source, target].join());
+
+    let min = Infinity;
+
+    for (let word of instructions(pos[source], pos[target])) {
+        let len = 0;
+        let current = 'A';
+        for (let next of word) {
+            len += count(n - 1, current, next)
+            current = next;
+        }
+        if (len < min) min = len;
+    }
+
+    countMap.set([n, source, target].join(), min);
+
+    return min;
+}
+
+/**
+ * Complexity of a word with (n + 1) keypads
+ */
+function complexity(n, word) {
+    let current = 'A';
+    let sum = 0;
+    for (let next of word) {
+        sum += count(n, current, next);
         current = next;
     }
-
-    return rs;
+    return sum;
 }
 
-function complexity(code) {
-    codes = [code];
-    codes = codes.flatMap(code => abstract('A', code));
-    //codes = codes.flatMap(code => abstract('a', code));
-    //codes = codes.flatMap(code => abstract('a', code));
-
-    let [min, max] = [Infinity, -Infinity];
-    for (let code of codes) {
-        if (code.length < min) min = code.length;
-        if (max < code.length) max = code.length;
-    }
-    console.log(code, codes.length, min, max);
-    console.log(codes);
-    console.log();
-    return min * code.replace(/[^\d]/, '');
-}
-
-let result = codes.reduce((sum, code) => sum + complexity(code), 0);
-console.log(result);
-
-/*
-
-code len  min max
-593A 12288 78 78
-283A 1280 72 76
-670A 512 68 72
-459A 3072 74 74
-279A 2048 76 80
-167360 (TOO HIGH)
-
-code len  min max
-593A 4718592 74 80
-283A 2867200 68 84
-670A 2539520 68 90
-459A 5767168 74 90
-279A 2064384 72 84
-162740 (CORRECT)
-
-93831469524
-86475783008
-84248089344
-90594397580
-91387668328
-Answer: 203640915832208
-
- */
+let numKeypads = 26; // <--- change to 3 for part 1
+let sum = codes.reduce((sum, code) => sum + code.replace(/[^\d]/, '') * complexity(numKeypads, code), 0);
+console.log(sum);
