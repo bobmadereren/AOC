@@ -71,6 +71,8 @@ function intersection(A, B) {
     return result;
 }
 
+let cliqueMemo = [[{ name: '', parent: null, cliqueContainsT: false, cliqueNeighbors: graphNodes }]];
+
 /**
  * @typedef {{name: string, parent: TreeNode, cliqueContainsT: boolean, cliqueNeighbors: GraphNode[]}} TreeNode
  * 
@@ -78,29 +80,41 @@ function intersection(A, B) {
  * @returns {TreeNode[]} Leaves of a clique tree.
  */
 function cliques(size) {
-    if (size == 0) return [{ name: '', parent: null, cliqueContainsT: false, cliqueNeighbors: graphNodes }];
+    if (size < cliqueMemo.length) return cliqueMemo[size];
 
     let leaves = [];
 
-    for (let oldLeaf of cliques(size - 1)) {
-        for (let cliqueNeighbor of oldLeaf.cliqueNeighbors) {
-            if (oldLeaf.name < cliqueNeighbor.name) {
+    for (let oldLeaf of cliques(size - 1))
 
-                let newLeaf = {
+        for (let cliqueNeighbor of oldLeaf.cliqueNeighbors)
+
+            if (oldLeaf.name < cliqueNeighbor.name)
+
+                leaves.push({
                     name: cliqueNeighbor.name,
                     parent: oldLeaf,
                     cliqueContainsT: oldLeaf.cliqueContainsT || cliqueNeighbor.name[0] == 't',
                     cliqueNeighbors: intersection(oldLeaf.cliqueNeighbors, cliqueNeighbor.neighbors)
-                };
+                });
 
-                leaves.push(newLeaf);
 
-            }
-        }
-    }
+    cliqueMemo.push(leaves);
 
     return leaves;
 }
 
+// Part 1
 console.log(cliques(3).filter(leaf => leaf.cliqueContainsT).length);
 
+// Part 2
+let size = 1;
+while (cliques(size).length > 0) size++;
+size--;
+
+let [node] = cliques(size);
+let qlique = [];
+while (node != null) {
+    qlique.push(node.name);
+    node = node.parent;
+}
+console.log(qlique.reverse().join());
